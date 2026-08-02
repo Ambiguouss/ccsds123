@@ -1,21 +1,19 @@
-enum SampleOrder {
+pub enum SampleOrder {
     BSQ,
     BIP,
     BIL,
 }
 
-
-
 pub struct HyperspectralImage {
-    data: Vec<i16>,
-    x_size: usize,
-    y_size: usize,
-    z_size: usize,   
-    order: SampleOrder
+    pub data: Vec<i16>,
+    pub x_size: usize,
+    pub y_size: usize,
+    pub z_size: usize,   
+    pub order: SampleOrder
 }
 
 impl HyperspectralImage {
-    fn get(&self, x: usize, y: usize, z: usize) -> i16 {
+    pub fn get(&self, x: usize, y: usize, z: usize) -> i16 {
         let idx = match self.order {
             SampleOrder::BSQ => z * self.y_size * self.x_size + y * self.x_size + x,
             SampleOrder::BIP => y * self.x_size * self.z_size + x * self.z_size + z,
@@ -24,7 +22,7 @@ impl HyperspectralImage {
         self.data[idx]
     }
 
-    fn get_coords(&self, idx: usize) -> (usize,usize,usize) {
+    pub fn get_coords(&self, idx: usize) -> (usize,usize,usize) {
         if matches!(self.order,SampleOrder::BIL) {
             let x = idx % self.x_size;
             let z = idx/self.x_size % self.z_size;

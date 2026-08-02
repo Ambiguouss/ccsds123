@@ -1,6 +1,8 @@
 mod hyperspectral_image;
 pub use hyperspectral_image::HyperspectralImage;
-
+mod central_difference_cache;
+mod local_difference_vector;
+mod local_sum;
 pub fn clip(x: i32, bounds: (i32, i32)) -> i32 {
     let (x_min,x_max) = bounds;
     x.clamp(x_min, x_max)
