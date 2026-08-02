@@ -1,5 +1,6 @@
 use crate::hyperspectral_image::HyperspectralImage;
 use crate::central_difference_cache::CentralDifferenceCache;
+use crate::consts::{MAX_P,FULL_LEN};
 
 fn central_local_difference(image : &HyperspectralImage, sigma: i32, x: usize, y: usize, z: usize) -> i32 {
     return 4*image.get(x,y,z) as i32 - sigma;
@@ -32,34 +33,36 @@ fn directional_differences(image : &HyperspectralImage, sigma: i32, x: usize, y:
 }
 
 #[derive(Debug, PartialEq)]
-enum CentralLocalDifferenceVector<const MAX_P:usize>{
-    Full {
-        directional: DirectionalDifferences,
-        previous_bands: [i32; MAX_P],
-    },
-    Reduced {
-        previous_bands: [i32; MAX_P],
+struct CentralLocalDifferenceVectorFull{
+    values: [i32; FULL_LEN],
+}
+#[derive(Debug, PartialEq)]
+struct CentralLocalDifferenceVectorReduced {
+    values: [i32; MAX_P],
+}
+
+
+fn compute_cldv_full(image : &HyperspectralImage, sigma: i32,cache: &CentralDifferenceCache<MAX_P>, x: usize, y: usize, z: usize) -> CentralLocalDifferenceVectorFull {
+    let mut values = [0i32; FULL_LEN];
+    let DirectionalDifferences {north,west,north_west} = directional_differences(image,sigma,x,y,z);
+    values[0]=north;
+    values[1]=west;
+    values[2]=north_west; 
+    for (i, v) in cache.recent().enumerate() {
+        values[i+3] = v;
+    }
+    CentralLocalDifferenceVectorFull {
+        values
     }
 }
 
-fn compute_cldv_full<const MAX_P: usize>(image : &HyperspectralImage, sigma: i32,cache: &CentralDifferenceCache<MAX_P>, x: usize, y: usize, z: usize) -> CentralLocalDifferenceVector<MAX_P> {
-    let mut previous_bands = [0i32; MAX_P];
+fn compute_cldv_reduced(cache: &CentralDifferenceCache<MAX_P>) -> CentralLocalDifferenceVectorReduced {
+    let mut values = [0i32; MAX_P];
     for (i, v) in cache.recent().enumerate() {
-        previous_bands[i] = v;
+        values[i] = v;
     }
-    CentralLocalDifferenceVector::Full {
-        directional : directional_differences(image,sigma,x,y,z),
-        previous_bands,
-    }
-}
-
-fn compute_cldv_reduced<const MAX_P: usize>(cache: &CentralDifferenceCache<MAX_P>) -> CentralLocalDifferenceVector<MAX_P> {
-    let mut previous_bands = [0i32; MAX_P];
-    for (i, v) in cache.recent().enumerate() {
-        previous_bands[i] = v;
-    }
-    CentralLocalDifferenceVector::Reduced {
-        previous_bands,
+    CentralLocalDifferenceVectorReduced {
+        values,
     }
 }
 
@@ -113,47 +116,34 @@ mod tests {
             north_west: 4 * img.get(0, 0, 0) as i32 - sigma,  // 4*1-6=-2
         });
     }
-
-    #[test]
-    fn compute_cldv_reduced_empty_cache() {
-        let cache: CentralDifferenceCache<3> = CentralDifferenceCache::new();
-        let cldv = compute_cldv_reduced(&cache);
-        assert_eq!(cldv, CentralLocalDifferenceVector::Reduced { previous_bands: [0, 0, 0] });
-    }
-
-    #[test]
-    fn compute_cldv_reduced_partial_cache() {
-        let mut cache: CentralDifferenceCache<3> = CentralDifferenceCache::new();
-        cache.push(5);
-        cache.push(9);
-        let cldv = compute_cldv_reduced(&cache);
-        // only 2 pushed; 3rd slot stays default 0
-        assert_eq!(cldv, CentralLocalDifferenceVector::Reduced { previous_bands: [9, 5, 0] });
-    }
-
-    #[test]
-    fn compute_cldv_reduced_full_cache() {
-        let mut cache: CentralDifferenceCache<3> = CentralDifferenceCache::new();
-        cache.push(1);
-        cache.push(2);
-        cache.push(3);
-        let cldv = compute_cldv_reduced(&cache);
-        assert_eq!(cldv, CentralLocalDifferenceVector::Reduced { previous_bands: [3, 2, 1] });
-    }
-
-    #[test]
-    fn compute_cldv_full_combines_directional_and_bands() {
+#[test]
+    fn full_places_directional_first_then_bands() {
         let img = test_image();
-        let mut cache: CentralDifferenceCache<3> = CentralDifferenceCache::new();
-        cache.push(11);
-        cache.push(22);
+        let mut cache: CentralDifferenceCache<MAX_P> = CentralDifferenceCache::new();
+        cache.push(100);
+        cache.push(200);
 
         let sigma = 6;
         let cldv = compute_cldv_full(&img, sigma, &cache, 1, 1, 0);
+        let d = directional_differences(&img, sigma, 1, 1, 0);
 
-        assert_eq!(cldv, CentralLocalDifferenceVector::Full {
-            directional: directional_differences(&img, sigma, 1, 1, 0),
-            previous_bands: [22, 11, 0],
-        });
+        assert_eq!(cldv.values[0], d.north);
+        assert_eq!(cldv.values[1], d.west);
+        assert_eq!(cldv.values[2], d.north_west);
+        assert_eq!(cldv.values[3], 200); // most recent pushed first
+        assert_eq!(cldv.values[4], 100);
+        // remaining slots (if MAX_P > 2) should be untouched zeros
+    }
+
+    #[test]
+    fn reduced_only_contains_bands_no_directional() {
+        let mut cache: CentralDifferenceCache<MAX_P> = CentralDifferenceCache::new();
+        cache.push(7);
+        cache.push(8);
+
+        let cldv = compute_cldv_reduced(&cache);
+
+        assert_eq!(cldv.values[0], 8);
+        assert_eq!(cldv.values[1], 7);
     }
 }
