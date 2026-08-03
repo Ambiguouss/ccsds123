@@ -5,6 +5,8 @@ mod local_difference_vector;
 mod local_sum;
 mod weight_vector;
 mod consts;
+mod predict;
+mod utils;
 pub fn clip(x: i32, bounds: (i32, i32)) -> i32 {
     let (x_min,x_max) = bounds;
     x.clamp(x_min, x_max)
