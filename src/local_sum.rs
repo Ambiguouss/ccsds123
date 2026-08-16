@@ -1,26 +1,26 @@
 use crate::hyperspectral_image::HyperspectralImage;
 
-type LocalSumFn = fn(&HyperspectralImage,usize,usize,usize) -> i32;
+type LocalSumFn = fn(&HyperspectralImage,usize,usize,usize) -> i64;
 
-pub fn neighbor_oriented_sum(image: &HyperspectralImage, x: usize, y: usize, z: usize) -> i32 {
+pub fn neighbor_oriented_sum(image: &HyperspectralImage, x: usize, y: usize, z: usize) -> i64 {
     if x==0 && y==0 {
         return 0;
     }
     if x==0 {
-        return 2*(image.get(x,y-1,z) as i32 +image.get(x+1,y-1,z) as i32);
+        return 2*(image.get(x,y-1,z) as i64 +image.get(x+1,y-1,z) as i64);
     }
     if y==0 {
-        return 4*image.get(x-1,y,z) as i32;
+        return 4*image.get(x-1,y,z) as i64;
     }
     if x==image.x_size-1 {
-        return image.get(x-1,y,z) as i32
-            +image.get(x-1,y-1,z) as i32
-                + 2*image.get(x,y-1,z) as i32;
+        return image.get(x-1,y,z) as i64
+            +image.get(x-1,y-1,z) as i64
+                + 2*image.get(x,y-1,z) as i64;
     }
-    return image.get(x-1,y,z) as i32
-        +image.get(x-1,y-1,z) as i32
-            +image.get(x,y-1,z) as i32
-                +image.get(x+1,y-1,z) as i32;
+    return image.get(x-1,y,z) as i64
+        +image.get(x-1,y-1,z) as i64
+            +image.get(x,y-1,z) as i64
+                +image.get(x+1,y-1,z) as i64;
 }
 
 

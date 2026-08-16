@@ -2,30 +2,30 @@ use crate::hyperspectral_image::HyperspectralImage;
 use crate::central_difference_cache::CentralDifferenceCache;
 use crate::consts::{MAX_P,FULL_LEN};
 
-fn central_local_difference(image : &HyperspectralImage, sigma: i32, x: usize, y: usize, z: usize) -> i32 {
-    return 4*image.get(x,y,z) as i32 - sigma;
+pub fn central_local_difference(image : &HyperspectralImage, sigma: i64, x: usize, y: usize, z: usize) -> i64 {
+    return 4*image.get(x,y,z) as i64 - sigma;
 }
 
 #[derive(Debug, PartialEq)]
 struct DirectionalDifferences{
-    north: i32,
-    west: i32,
-    north_west: i32,
+    north: i64,
+    west: i64,
+    north_west: i64,
 }
 
-fn directional_differences(image : &HyperspectralImage, sigma: i32, x: usize, y: usize, z: usize) -> DirectionalDifferences {
+fn directional_differences(image : &HyperspectralImage, sigma: i64, x: usize, y: usize, z: usize) -> DirectionalDifferences {
     let north = if y > 0 {
-        4*image.get(x,y-1,z) as i32 - sigma
+        4*image.get(x,y-1,z) as i64 - sigma
     } else {
         0
     };
     let west = if y > 0 && x > 0 {
-        4*image.get(x-1,y,z) as i32 - sigma
+        4*image.get(x-1,y,z) as i64 - sigma
     } else {
         north
     };
     let north_west = if y > 0 && x > 0 {
-        4*image.get(x-1,y-1,z) as i32 - sigma
+        4*image.get(x-1,y-1,z) as i64 - sigma
     } else {
         north
     };
@@ -34,27 +34,27 @@ fn directional_differences(image : &HyperspectralImage, sigma: i32, x: usize, y:
 
 #[derive(Debug, PartialEq)]
 pub struct CentralLocalDifferenceVectorFull{
-    values: [i32; FULL_LEN],
+    pub values: [i64; FULL_LEN],
 }
 #[derive(Debug, PartialEq)]
 pub struct CentralLocalDifferenceVectorReduced {
-    values: [i32; MAX_P],
+    pub values: [i64; MAX_P],
 }
 
 impl CentralLocalDifferenceVectorReduced {
-    pub fn get(&self,t:usize)->i32 {
+    pub fn get(&self,t:usize)->i64 {
         self.values[t]
     }
 }
 
 impl CentralLocalDifferenceVectorFull {
-    pub fn get(&self,t:usize) ->i32 {
+    pub fn get(&self,t:usize) ->i64 {
         self.values[t]
     }
 }
 
-pub fn compute_cldv_full(image : &HyperspectralImage, sigma: i32,cache: &CentralDifferenceCache<MAX_P>, x: usize, y: usize, z: usize) -> CentralLocalDifferenceVectorFull {
-    let mut values = [0i32; FULL_LEN];
+pub fn compute_cldv_full(image : &HyperspectralImage, sigma: i64,cache: &CentralDifferenceCache<MAX_P>, x: usize, y: usize, z: usize) -> CentralLocalDifferenceVectorFull {
+    let mut values = [0i64; FULL_LEN];
     let DirectionalDifferences {north,west,north_west} = directional_differences(image,sigma,x,y,z);
     values[0]=north;
     values[1]=west;
@@ -68,7 +68,7 @@ pub fn compute_cldv_full(image : &HyperspectralImage, sigma: i32,cache: &Central
 }
 
 pub fn compute_cldv_reduced(cache: &CentralDifferenceCache<MAX_P>) -> CentralLocalDifferenceVectorReduced {
-    let mut values = [0i32; MAX_P];
+    let mut values = [0i64; MAX_P];
     for (i, v) in cache.recent().enumerate() {
         values[i] = v;
     }
@@ -78,8 +78,7 @@ pub fn compute_cldv_reduced(cache: &CentralDifferenceCache<MAX_P>) -> CentralLoc
 }
 #[cfg(test)]
 impl CentralLocalDifferenceVectorReduced {
-    #[cfg(test)]
-    pub(crate) fn new_for_test(values: [i32; MAX_P]) -> Self {
+    pub(crate) fn new_for_test(values: [i64; MAX_P]) -> Self {
         CentralLocalDifferenceVectorReduced { values }
     }
 }
@@ -127,9 +126,9 @@ mod tests {
         let sigma = 6;
         let d = directional_differences(&img, sigma, 1, 1, 0);
         assert_eq!(d, DirectionalDifferences {
-            north: 4 * img.get(1, 0, 0) as i32 - sigma,       // 4*2-6=2
-            west: 4 * img.get(0, 1, 0) as i32 - sigma,        // 4*4-6=10
-            north_west: 4 * img.get(0, 0, 0) as i32 - sigma,  // 4*1-6=-2
+            north: 4 * img.get(1, 0, 0) as i64 - sigma,       // 4*2-6=2
+            west: 4 * img.get(0, 1, 0) as i64 - sigma,        // 4*4-6=10
+            north_west: 4 * img.get(0, 0, 0) as i64 - sigma,  // 4*1-6=-2
         });
     }
 #[test]

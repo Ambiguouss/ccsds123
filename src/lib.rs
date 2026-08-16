@@ -7,7 +7,8 @@ mod weight_vector;
 mod consts;
 mod predict;
 mod utils;
-pub fn clip(x: i32, bounds: (i32, i32)) -> i32 {
+mod pipeline;
+pub fn clip(x: i64, bounds: (i64, i64)) -> i64 {
     let (x_min,x_max) = bounds;
     x.clamp(x_min, x_max)
 }

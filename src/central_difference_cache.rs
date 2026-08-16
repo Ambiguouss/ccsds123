@@ -1,5 +1,5 @@
 pub struct CentralDifferenceCache<const N:usize> {
-    values: [i32;N],
+    values: [i64;N],
     write_pos: usize,
     len: usize,
 }
@@ -9,13 +9,13 @@ impl<const N:usize> CentralDifferenceCache<N>{
         Self { values: [0; N], write_pos: 0, len: 0 }
     }
 
-    pub fn push(&mut self, d: i32) {
+    pub fn push(&mut self, d: i64) {
         self.values[self.write_pos] = d;
         self.write_pos = (self.write_pos + 1) % N;
         self.len = (self.len + 1).min(N);
     }
 
-    pub fn get(&self, back: usize) -> i32 {
+    pub fn get(&self, back: usize) -> i64 {
         if back >= self.len {
             panic!("index out of bounds in cache!");
         }
@@ -23,7 +23,7 @@ impl<const N:usize> CentralDifferenceCache<N>{
         self.values[idx]
     }
     
-    pub fn recent(&self) -> impl Iterator<Item = i32> + '_ {
+    pub fn recent(&self) -> impl Iterator<Item = i64> + '_ {
         (0..self.len).map(move |back| self.get(back))
     }
 
@@ -36,7 +36,7 @@ mod tests {
     #[test]
     fn new_cache_is_empty() {
         let cache: CentralDifferenceCache<3> = CentralDifferenceCache::new();
-        assert_eq!(cache.recent().collect::<Vec<_>>(), Vec::<i32>::new());
+        assert_eq!(cache.recent().collect::<Vec<_>>(), Vec::<i64>::new());
     }
 
     #[test]

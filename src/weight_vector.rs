@@ -3,12 +3,12 @@ use crate::utils::{sgn_plus,shift_right};
 use crate::hyperspectral_image::HyperspectralImage;
 use crate::local_difference_vector::{CentralLocalDifferenceVectorReduced};
 pub struct WeightVectorFull{
-    weights : [i32;FULL_LEN],
+    pub weights : [i64;FULL_LEN],
 }
 
 
 pub struct WeightVectorReduced{
-    weights : [i32;MAX_P],
+    pub weights : [i64;MAX_P],
 }
 
 impl WeightVectorReduced{
@@ -28,15 +28,15 @@ impl WeightVectorReduced{
         let ro = ro_basic.clamp(V_MIN,V_MAX)+D-OMEGA;
         for (i, v) in self.weights.iter_mut().enumerate() {
             let val = *v as i64+((shift_right(sgn_plus(e)*(u.get(i) as i64),ro as i64)+1)>>1); 
-            *v=val.clamp(W_MIN,W_MAX) as i32;
+            *v=val.clamp(W_MIN,W_MAX) as i64;
         }
     }
 }
 
 impl WeightVectorFull{
     pub fn new_default() -> Self{
-        let mut weights = [0i32; FULL_LEN];
-        let bands: [i32; MAX_P] = WeightVectorReduced::new_default().weights;
+        let mut weights = [0i64; FULL_LEN];
+        let bands: [i64; MAX_P] = WeightVectorReduced::new_default().weights;
         for (i, v) in bands.iter().enumerate() {
             weights[i + 3] = *v;
         }
@@ -51,7 +51,7 @@ mod tests {
     use crate::hyperspectral_image::SampleOrder;
     use crate::local_difference_vector::CentralLocalDifferenceVectorReduced; // adjust path to your actual module
 
-    fn test_u(values: [i32; MAX_P]) -> CentralLocalDifferenceVectorReduced {
+    fn test_u(values: [i64; MAX_P]) -> CentralLocalDifferenceVectorReduced {
         CentralLocalDifferenceVectorReduced::new_for_test(values)
     }
     #[test]
@@ -146,7 +146,7 @@ mod tests {
         let img = test_image();
         let mut w = WeightVectorReduced::new_default();
         let before = w.weights[0];
-        let mut u_vals = [0i32; MAX_P];
+        let mut u_vals = [0i64; MAX_P];
         u_vals[0] = 100;
         let u = test_u(u_vals);
 
@@ -160,7 +160,7 @@ mod tests {
         let img = test_image();
         let mut w = WeightVectorReduced::new_default();
         let before = w.weights[0];
-        let mut u_vals = [0i32; MAX_P];
+        let mut u_vals = [0i64; MAX_P];
         u_vals[0] = 100;
         let u = test_u(u_vals);
 
@@ -173,8 +173,8 @@ mod tests {
     fn weights_never_exceed_clip_bounds() {
         let img = test_image();
         let mut w = WeightVectorReduced::new_default();
-        let mut u_vals = [0i32; MAX_P];
-        u_vals[0] = i32::MAX;
+        let mut u_vals = [0i64; MAX_P];
+        u_vals[0] = i64::MAX;
         let u = test_u(u_vals);
 
         // repeatedly push toward the upper bound
@@ -183,7 +183,7 @@ mod tests {
         }
 
         for weight in w.weights.iter() {
-            assert!(*weight >= W_MIN as i32 && *weight <= W_MAX as i32);
+            assert!(*weight >= W_MIN as i64 && *weight <= W_MAX as i64);
         }
     }
 

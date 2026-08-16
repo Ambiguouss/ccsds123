@@ -2,7 +2,7 @@ use crate::hyperspectral_image::HyperspectralImage;
 use crate::consts::{OMEGA,S_MAX,S_MID,S_MIN,MAX_P,R};
 use crate::utils::mod_star;
 //returns scaled predicted sample
-fn scaled_predicted_value(image:&HyperspectralImage, sigma:i64, dhat:i64, x:usize, y:usize, z:usize) -> i64 {
+pub fn scaled_predicted_value(image:&HyperspectralImage, sigma:i64, dhat:i64, x:usize, y:usize, z:usize) -> i64 {
     if x==0 && y==0 && (z==0 || MAX_P==0) {
         return 2*S_MID;
     }
