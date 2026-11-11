@@ -1,6 +1,5 @@
 use crate::hyperspectral_image::HyperspectralImage;
 
-type LocalSumFn = fn(&HyperspectralImage,usize,usize,usize) -> i64;
 
 pub fn neighbor_oriented_sum(image: &HyperspectralImage, x: usize, y: usize, z: usize) -> i64 {
     if x==0 && y==0 {

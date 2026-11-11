@@ -8,12 +8,18 @@ use crate::central_difference_cache::CentralDifferenceCache;
 use crate::local_sum::neighbor_oriented_sum;
 
 
-struct Predictor{
+/// Runs the CCSDS-123.0-B-2 adaptive predictor (reduced, neighbor-oriented mode)
+/// over a whole image and returns the scaled predicted sample for every sample,
+/// in BIP traversal order (band z innermost, then x, then y).
+pub struct Predictor{
     image: HyperspectralImage
 }
 impl Predictor{
-    
-    fn run(&self) -> Vec<i64> {
+    pub fn new(image: HyperspectralImage) -> Self {
+        Self { image }
+    }
+
+    pub fn run(&self) -> Vec<i64> {
         let mut weight_vectors: Vec<WeightVectorReduced> = (0..self.image.z_size)
         .map(|_| WeightVectorReduced::new_default())
         .collect();

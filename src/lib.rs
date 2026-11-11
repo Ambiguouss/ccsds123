@@ -1,5 +1,5 @@
 mod hyperspectral_image;
-pub use hyperspectral_image::HyperspectralImage;
+pub use hyperspectral_image::{HyperspectralImage, SampleOrder};
 mod central_difference_cache;
 mod local_difference_vector;
 mod local_sum;
@@ -8,6 +8,7 @@ mod consts;
 mod predict;
 mod utils;
 mod pipeline;
+pub use pipeline::Predictor;
 pub fn clip(x: i64, bounds: (i64, i64)) -> i64 {
     let (x_min,x_max) = bounds;
     x.clamp(x_min, x_max)

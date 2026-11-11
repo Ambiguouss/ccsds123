@@ -49,6 +49,7 @@ impl WeightVectorFull{
 mod tests {
     use super::*;
     use crate::hyperspectral_image::SampleOrder;
+    use crate::consts::S_MAX;
     use crate::local_difference_vector::CentralLocalDifferenceVectorReduced; // adjust path to your actual module
 
     fn test_u(values: [i64; MAX_P]) -> CentralLocalDifferenceVectorReduced {
@@ -174,12 +175,12 @@ mod tests {
         let img = test_image();
         let mut w = WeightVectorReduced::new_default();
         let mut u_vals = [0i64; MAX_P];
-        u_vals[0] = i64::MAX;
+        u_vals[0] = 1 << (D + 2);
         let u = test_u(u_vals);
 
         // repeatedly push toward the upper bound
         for _ in 0..1000 {
-            w.update(&img, &u, i64::MAX / 4, 0, 1, 1, 0);
+            w.update(&img, &u, S_MAX, 0, 1, 1, 0);
         }
 
         for weight in w.weights.iter() {
